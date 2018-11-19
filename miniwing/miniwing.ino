@@ -100,16 +100,18 @@ void showText(char * addr){
 // displays address as a QR code
 void showQR(char * addr){
   tft.fillScreen(BGCOLOR);
-    
+
+  
   // Create the QR code
   QRCode qrcode;
   uint8_t qrcodeData[qrcode_getBufferSize(4)];
   qrcode_initText(&qrcode, qrcodeData, 4, 1, addr);
 
+  tft.fillRect(80, 0, qrcode.size*2+10, qrcode.size*2+10, ST77XX_WHITE);
   for (uint8_t y = 0; y < qrcode.size; y++) {
       for (uint8_t x = 0; x < qrcode.size; x++) {
           if(qrcode_getModule(&qrcode, x, y)){
-            tft.fillRect(80+2*x, 1+2*y, 2, 2, MAINCOLOR);
+            tft.fillRect(85+2*x, 5+2*y, 2, 2, ST77XX_BLACK);
           }
       }
   }
