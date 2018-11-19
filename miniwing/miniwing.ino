@@ -6,6 +6,15 @@
 #include "qrcode.h"
 #include <Bitcoin.h>
 
+#define NIGHTMODE
+
+#ifdef NIGHTMODE
+#define BGCOLOR ST77XX_BLACK
+#define MAINCOLOR ST77XX_WHITE
+#else
+#define BGCOLOR ST77XX_WHITE
+#define MAINCOLOR ST77XX_BLACK
+#endif
 // definitions below are used to choose correct pins for 
 // different boards such that the code will work for any
 
@@ -44,11 +53,6 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 // Buttons controller
 Adafruit_miniTFTWing ss; 
 
-// handy function to convert normal RGB color to tft-specific colors
-word RGBColor( byte R, byte G, byte B){
-  return ( ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3) );
-}
-
 // our account master public key
 // n-th receiving public key is derived from master key as hdpubkey.child(0).child(n)
 // for change address we use hdpubkey.child(1).child(n)
@@ -75,22 +79,27 @@ void setup() {
   Serial.println("TFT initialized");
 
   tft.setRotation(3);
-  tft.fillScreen(ST77XX_WHITE);
+  tft.fillScreen(BGCOLOR);
   // init done
-
-  tft.setTextSize(2);
-  tft.setTextColor(ST77XX_BLACK);
 
 }
 
+// prints address to the screen
 void showText(char * addr){
-  tft.fillScreen(ST77XX_WHITE);
+  tft.setTextSize(2);
+  if(use_change){
+    tft.setTextColor(ST77XX_RED);
+  }else{
+    tft.setTextColor(ST77XX_GREEN);
+  }
+  tft.fillScreen(BGCOLOR);
   tft.setCursor(0,20);
   tft.println(addr);
 }
 
+// displays address as a QR code
 void showQR(char * addr){
-  tft.fillScreen(ST77XX_WHITE);
+  tft.fillScreen(BGCOLOR);
     
   // Create the QR code
   QRCode qrcode;
@@ -100,13 +109,35 @@ void showQR(char * addr){
   for (uint8_t y = 0; y < qrcode.size; y++) {
       for (uint8_t x = 0; x < qrcode.size; x++) {
           if(qrcode_getModule(&qrcode, x, y)){
-            tft.fillRect(50+2*x, 1+2*y, 2, 2, ST77XX_BLACK);
+            tft.fillRect(80+2*x, 1+2*y, 2, 2, MAINCOLOR);
           }
       }
   }
+  tft.setTextSize(1);
+  tft.setCursor(0,10);
+  if(use_change){
+    tft.setTextColor(ST77XX_RED);
+    tft.print("Change #");
+  }else{
+    tft.setTextColor(ST77XX_GREEN);
+    tft.print("Recv #");
+  }
+  tft.println(n);
+  tft.println();
+  tft.print("m/");
+  tft.print(int(use_change));
+  tft.print("/");
+  tft.println(n);
+  tft.println();
+  for(int i=0; i<strlen(addr); i++){
+    tft.print(addr[i]);
+    if((i+1)%12 == 0){
+      tft.println();
+    }
+  }
 }
 
-bool QR_mode = false; // show qr or text?
+bool QR_mode = true; // show qr or text?
 bool new_addr = true; // if pubkey needs to be recalculated
 char addr[35]; // char buffer to store address
 
