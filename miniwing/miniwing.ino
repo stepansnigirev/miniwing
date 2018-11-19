@@ -5,6 +5,8 @@
 #include "Adafruit_miniTFTWing.h"
 #include "qrcode.h"
 
+#include <Bitcoin.h>
+
 Adafruit_miniTFTWing ss;
 
 #define TFT_RST    -1    // we use the seesaw for resetting to save a pin
@@ -42,6 +44,8 @@ word RGBColor( byte R, byte G, byte B){
   return ( ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3) );
 }
 
+PrivateKey pk("L1NEk79eYwSS8Nc7E4zL1F5CEySvRnHp5twU1zbjy74prUP1yTts");
+
 void setup() {
   Serial.begin(9600);
   if (!ss.begin()) {
@@ -58,18 +62,17 @@ void setup() {
   tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
   Serial.println("TFT initialized");
 
+  char addr[35];
+  pk.address(addr, sizeof(addr));
+
   tft.setRotation(3);
   tft.fillScreen(ST77XX_WHITE);
   // init done
 
   tft.setTextSize(2);
-  tft.setTextColor(0xFFFA);
-  tft.setCursor(0,21);
-  tft.println(" 1EuLLE5Q7mx\n HAwP5y9kHM1\n JAUjRzQYG22");
   tft.setTextColor(ST77XX_BLACK);
   tft.setCursor(0,20);
-  tft.println(" 3LyGX8XECdm\n LHBxFyvsFLx\n koBhvFNu7j4N");
-//  tft.println(" 1EuLLE5Q7mx\n HAwP5y9kHM1\n JAUjRzQYG22");
+  tft.println(addr);
 
   uint32_t buttons = TFTWING_BUTTON_ALL;
   while((buttons & TFTWING_BUTTON_A) > 0){
@@ -83,7 +86,7 @@ void setup() {
   // Create the QR code
   QRCode qrcode;
   uint8_t qrcodeData[qrcode_getBufferSize(4)];
-  qrcode_initText(&qrcode, qrcodeData, 4, 1, "﻿3LyGX8XECdmLHBxFyvsFLxkoBhvFNu7j4N");
+  qrcode_initText(&qrcode, qrcodeData, 4, 1, addr);
 
   for (uint8_t y = 0; y < qrcode.size; y++) {
       for (uint8_t x = 0; x < qrcode.size; x++) {
