@@ -146,6 +146,7 @@ char addr[35]; // char buffer to store address
 void loop() {
   // check if we need to recalculate the address (it's slow and not necessary if we switch between QR and text)
   if(new_addr){
+    tft.fillScreen(BGCOLOR); // to show that something happens
     // bitcoin logic
     // use_change will be converted to int and we will use it as first index for derivation
     HDPublicKey hdchild = hdpubkey.child(use_change).child(n);
@@ -160,11 +161,45 @@ void loop() {
   }
 
   uint32_t buttons = TFTWING_BUTTON_ALL;
-  while((buttons & TFTWING_BUTTON_A) > 0){
+  while(buttons == TFTWING_BUTTON_ALL){ // wait for any button
     buttons = ss.readButtons();
-    delay(100); // delay to remove gitter
-    Serial.println((buttons & TFTWING_BUTTON_SELECT));
+    delay(100);
   }
-  QR_mode = !QR_mode; // switch between QR and text
+  Serial.println(buttons);
+  Serial.println(TFTWING_BUTTON_ALL);
+  Serial.println();
+  delay(100); // delay to remove gitter
+  // toggle QR / text display
+  if( (buttons & TFTWING_BUTTON_A) == 0 ){
+    QR_mode = !QR_mode; // switch between QR and text
+    Serial.println("A");
+    return;
+  }
+  // right btn click
+  if( (buttons & TFTWING_BUTTON_RIGHT) == 0 ){
+    n += 1;
+    new_addr = true;
+    Serial.println("Right");
+    return;
+  }
+  // left btn click, only if n > 0
+  if( (buttons & TFTWING_BUTTON_LEFT) == 0 && (n > 0)){
+    Serial.println("Left");
+    n -= 1;
+    new_addr = true;
+    return;
+  }
 
+  if( (buttons & TFTWING_BUTTON_UP) == 0 && (use_change)){
+    Serial.println("Up");
+    use_change = false;
+    new_addr = true;
+    return;
+  }
+  if( (buttons & TFTWING_BUTTON_DOWN) == 0 && (!use_change)){
+    Serial.println("Up");
+    use_change = true;
+    new_addr = true;
+    return;
+  }
 }
